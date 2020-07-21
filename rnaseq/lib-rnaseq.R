@@ -27,3 +27,27 @@ calcAvgGenesetExpressionZScore.Seurat <- function(object, geneset, scorename="ge
   
   return(umap_avgExpr_df)
 }
+
+
+"  Calculate the z-score for a geneset per cell in a Seurat object. 
+Return a tibble with columns 'cellID', 'geneSymbol', Zscore' and 'genset'.
+"
+calcZscore.Seurat <- function(object, geneset, geneset_label, celllabel_prefix = "HNSCC") {
+  genes_selected <- intersect(rownames(object),  geneset)
+  
+  selected_assay <- GetAssayData(object, slot = "scale.data")[which(rownames(object) %in% genes_selected), ]
+  
+  zscores <- 
+    scale(t(selected_assay)) %>%
+    t() %>% 
+    as_tibble(rownames = "geneSymbol") %>%
+    pivot_longer(cols = matches(celllabel_prefix), names_to = "cellID", values_to = "Zscore") %>% 
+    mutate(cellID = reorder(cellID, Zscore)) %>%
+    mutate(geneset = geneset_label) %>% 
+    group_by(cellID, geneSymbol) %>% 
+    arrange(Zscore) %>% 
+    ungroup() 
+  
+  return(zscores)
+  
+}
