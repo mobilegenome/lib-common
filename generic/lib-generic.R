@@ -10,3 +10,9 @@ conditional_RDS <- function(obj, fpath, FUN) {
     return(obj)
   }
 }
+
+read_via_SSH <- function(path, host, FUN) {
+  ssh_connection <- paste('ssh', host, '  cat', path, sep=" ")
+  response <- FUN(pipe(ssh_connection))
+  return(response)
+}
